@@ -1,45 +1,99 @@
 import { createStore } from "redux";
 
-const add = document.getElementById("add");
-const minus = document.getElementById("minus");
-const number = document.querySelector("span");
+//0
+const form = document.querySelector("form");
+const input = document.querySelector("input");
+const ul = document.querySelector("ul");
 
-number.innerText = 0;
+const ADD_TODO = "ADD_TODO";
+const DELETE_TODO = "DELETE_TODO";
+//0
 
-//굳이 이렇게 하는 이유는
-//변수 설정 없이 string을 그대로 사용하면
-//오타가 있어도 에러가 알려주지 않음
-const ADD = "ADD";
-const MINUS = "MINUS";
+const addToDo = (text) => {
+    return {
+        type: ADD_TODO, text
+    };
+};
 
-const countModifier = (count = 0, action) => {    
-    switch (action.type) {
-        case ADD:
-            return count + 1
-        case MINUS:
-            return count -1;
+const deleteToDo = (id) => {
+    return {
+        type: DELETE_TODO, id
+    };
+};
+
+//1
+const reducer = (state = [], action) => {
+    switch(action.type) {
+        //4
+        case ADD_TODO:
+            const newToDoObj = { text: action.text, id: Date.now() };
+            return [newToDoObj, ...state];
+        //4
+
+        //8
+        case DELETE_TODO:
+            const cleaned = state.filter(toDo => toDo.id !== action.id)
+            return cleaned;
+        //8
+        
         default:
-            return count;
+            return state;
     }
 };
 
-const countStore = createStore(countModifier);
+const store = createStore(reducer);
+//1
 
-const onChange = () => {
-    number.innerText = countStore.getState();
+//3
+const dispatchAddToDo = (text) => {
+    store.dispatch(addToDo(text));
 }
+//3
 
-//변화를 store에서 감지하고 싶을 때 사용
-//store가 바뀔 때마다 onChange 실행
-countStore.subscribe(onChange);
+//7
+const dispatchDeleteToDo = (e) => {
+    const id = parseInt(e.target.parentNode.id);
 
-const handleAdd = () => {
-    countStore.dispatch({ type: ADD });
+    store.dispatch(deleteToDo(id));
 }
+//7
 
-const handleMinus = () => {
-    countStore.dispatch({ type: MINUS });
+//6
+const paintToDos = () => {
+    const toDos = store.getState();
+
+    ul.innerHTML = "";
+
+    toDos.forEach(toDo => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+
+        li.id = toDo.id;
+        li.innerText = toDo.text;
+
+        ul.appendChild(li);
+
+        btn.innerText = "DEL";
+        btn.addEventListener("click", dispatchDeleteToDo);
+
+        li.appendChild(btn);
+    })
 }
+//6
 
-add.addEventListener("click", handleAdd);
-minus.addEventListener("click", handleMinus);
+//5
+store.subscribe(paintToDos);
+//5
+
+const onSubmit = e => {
+    e.preventDefault();
+
+    const toDo = input.value;
+    input.value = "";
+
+    //2
+    dispatchAddToDo(toDo);
+    //2
+};
+
+form.addEventListener("submit", onSubmit);
